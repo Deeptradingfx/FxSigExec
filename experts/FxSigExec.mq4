@@ -1,10 +1,10 @@
-//+----------------------------------------------------------------------------+
-//|                                                     FxSigExec.mq4 |
-//|                                                                             |
-//|                                                                             |
 //+------------------------------------------------------------------+
-#property copyright ""
-#property link      ""
+//|                                            FxSigExec.mq4 |
+//            Copyright 2019, Carlos Eduardo Lopez |
+//                                        c.lopez@kmels.net |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2019, Carlos Eduardo Lopez"
+#property link      "c.lopez@kmels.net"
 #property version   "1.00"
 #property strict
 
