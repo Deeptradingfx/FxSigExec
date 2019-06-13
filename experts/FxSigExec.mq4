@@ -20,8 +20,8 @@ string handle_req(string cmd, string payload) {
    bool jsonPayload = true;
    cmd = StringTrimLeft(StringTrimRight(cmd));
    
-   JSONObject *o;
-   Print("Parsing payload ...");
+   JSONObject *o = NULL;
+
    if (jsonPayload) {
       JSONParser *p = new JSONParser();
       JSONValue *v = p.parse(payload);
@@ -45,7 +45,7 @@ string handle_req(string cmd, string payload) {
    }
    
    if (StringCompare("Score", cmd) == 0) {
-      int dateOffset = MathRound((TimeCurrent() - TimeLocal())/3600.0);
+      int dateOffset = (int)MathRound((TimeCurrent() - TimeLocal())/3600.0);
       dateOffset *= 3600;
    
       FxSignal *it = makeFxSignal(o, payload);
@@ -72,7 +72,6 @@ string handle_req(string cmd, string payload) {
       reply += " " + IntegerToString(o.getInt("message_id"));
    } else
    if (StringCompare("Risk", cmd) == 0) {
-      Print("Risking..");
       double percentage = o.getDouble("risk_percentage");
       Print(DoubleToStr(percentage));
       double balance = o.getDouble("risk_balance");
@@ -86,8 +85,6 @@ string handle_req(string cmd, string payload) {
       reply += " " + IntegerToString(o.getInt("message_id"));
    }
    
-   Print("Compared Ping command: " + (StringCompare("Ping", cmd) == 0));
-
    if (o)
       delete o;
    return reply;
@@ -124,7 +121,6 @@ int OnInit()
       if(items[0].hasInput())
         {
          subscriber.recv(message);
-         //  Process signal update
          string request = message.getData(); 
          
          Print("Suscriber input: " + request);
