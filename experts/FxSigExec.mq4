@@ -15,6 +15,8 @@ Context context;
 
 string host = "127.0.0.1";
 
+string genpub,gensec;
+
 string handle_req(string cmd, string payload) {
    string reply = NULL;
    bool jsonPayload = true;
@@ -44,7 +46,10 @@ string handle_req(string cmd, string payload) {
       delete o;
    }
    
-   if (StringCompare("Trade",cmd) == 0) {
+   if (StringCompare("GetPubKey",cmd) == 0) {
+      reply = "{\"pubkey\": \"" +genpub + "\"}";
+   }
+   else if (StringCompare("Trade",cmd) == 0) {
       Print("Parsing trade risk ...", o);
       double riskpct = o.getDouble("balance_risk_pct");
       Print("Parsing trade risk ... DONE");
@@ -110,6 +115,10 @@ void SCORE() {
 
 int OnInit()
   {
+   Print("Generating key pair ... ");
+   Z85::generateKeyPair(genpub,gensec);
+   Print("1) Generated public key: [",genpub,"]");
+   Print("1) Generated private key: [",gensec,"]");
    Print("Connecting command requests ...");
    
    Print("Connecting to signals ...");
@@ -155,8 +164,10 @@ int OnInit()
          
          string response = handle_req(command, payload);
          Print(command + ". Replying: " + response);
+
+         string acc_number = IntegerToString(AccountNumber());
          if (response != NULL)
-            sender.send(AccountInfoInteger(ACCOUNT_NUMBER)+" OK " + command + " " + response);
+            sender.send(acc_number+" OK " + command + " " + response);
         }
      } 
 
