@@ -44,16 +44,29 @@ string handle_req(string cmd, string payload) {
       delete o;
    }
    
-   if (StringCompare("Score", cmd) == 0) {
+   if (StringCompare("Trade",cmd) == 0) {
+      Print("Parsing trade risk ...", o);
+      double riskpct = o.getDouble("balance_risk_pct");
+      Print("Parsing trade risk ... DONE");
+
+      Print("Parsing fx signal to trade ...");
+      FxSignal *it = makeFxSignal(o, payload);
+      Print("Parsing fx signal to trade ... DONE");
+
+      Print("Trading ", riskpct);
+      int ticket = Execute_Trade(it, riskpct);
+      reply = IntegerToString(ticket);
+   }
+   else if (StringCompare("Score", cmd) == 0) {
       int dateOffset = (int)MathRound((TimeCurrent() - TimeLocal())/3600.0);
       dateOffset *= 3600;
-   
+
       FxSignal *it = makeFxSignal(o, payload);
-      
+
       it.date += dateOffset;
       it.inserted_at += dateOffset;
       ScoreResult* c = scoreFxSignal(it);
-      
+
       Print("Score result: ");
       Print(c.pretty());
       Print("Score reply: ");
@@ -65,13 +78,13 @@ string handle_req(string cmd, string payload) {
       c.published_on -= dateOffset;
       Print(c.json());
       reply = c.json();
-   } else
-   if (StringCompare("Ping", cmd) == 0) {
+   } 
+   else if (StringCompare("Ping", cmd) == 0) {
       reply = "Pong!";
       reply += " " + IntegerToString(o.getInt("chat_id"));
       reply += " " + IntegerToString(o.getInt("message_id"));
-   } else
-   if (StringCompare("Risk", cmd) == 0) {
+   } 
+   else if (StringCompare("Risk", cmd) == 0) {
       double percentage = o.getDouble("risk_percentage");
       Print(DoubleToStr(percentage));
       double balance = o.getDouble("risk_balance");
@@ -80,7 +93,8 @@ string handle_req(string cmd, string payload) {
       Print(currency);
       FxSignal *it = makeFxSignal(o, payload);
       
-      reply = DoubleToString(possize(it, currency, balance, percentage), 2);
+      double lot_size = possize(it, currency, balance, percentage);
+      reply = DoubleToString(lot_size, 2);
       reply += " " + IntegerToString(o.getInt("chat_id"));
       reply += " " + IntegerToString(o.getInt("message_id"));
    }
