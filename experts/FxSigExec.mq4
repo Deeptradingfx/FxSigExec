@@ -11,6 +11,10 @@
 #include <Zmq/Zmq.mqh>
 #include "fxsigs.mqh"
 
+#import "libsodium.dll"
+int crypto_scalarmult(uchar &q[], const uchar &n[], const uchar &p[]); // q = nP
+#import
+
 Context context;
 
 string host = "127.0.0.1";
@@ -113,12 +117,61 @@ void SCORE() {
    
 }
 
+string deriveSharedKey(string myPrivKey, string theirPubKey) {
+   uchar pubkey_bytes[];
+   uchar privkey_bytes[];
+
+   if (0 == Z85::decode(theirPubKey, pubkey_bytes)) {
+      Print("deriveShared: Invalid pubkey");
+      return NULL;
+   }
+
+   if (0 == Z85::decode(myPrivKey, privkey_bytes)) {
+      Print("deriveShared: Invalid privkey");
+      return NULL;
+   }
+
+   if (32 != ArraySize(pubkey_bytes)) {
+       Print("deriveShared: Invalid pubkey size");
+       return NULL;
+   }
+
+   if (32 != ArraySize(privkey_bytes)) {
+       Print("deriveShared: Invalid privkey size");
+       return NULL;
+   }
+
+   uchar sharedSecret[32];
+   if (0 != crypto_scalarmult(sharedSecret,privkey_bytes,pubkey_bytes)) {
+      Print("deriveShared: failed to multiply");
+      return NULL;
+   }
+
+   string encodedSecret;
+   if (0 == Z85::encode(encodedSecret, sharedSecret)) {
+      Print("deriveShared: failed to multiply");
+      return NULL;
+   }
+   return encodedSecret;
+}
+
 int OnInit()
   {
    Print("Generating key pair ... ");
    Z85::generateKeyPair(genpub,gensec);
+
+   string theirPriv = "D:)Q[IlAW!ahhC2ac:9*A}h:p?([4%wOTJ%JR%cs";
+   string theirPub = "Yne@$w-vo<fVvi]a<NY6T1ed:M$fCG*[IaLV{hID";
+
    Print("1) Generated public key: [",genpub,"]");
    Print("1) Generated private key: [",gensec,"]");
+
+   string myDH = deriveSharedKey(gensec, theirPub);
+   string theirDH = deriveSharedKey(theirPriv, genpub);
+
+   Print("My dh ", myDH);
+   Print("Their dh ", theirDH);
+
    Print("Connecting command requests ...");
    
    Print("Connecting to signals ...");
